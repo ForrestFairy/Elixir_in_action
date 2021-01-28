@@ -1,8 +1,7 @@
 defmodule TodoList do
-
   defstruct auto_id: 1, entries: HashDict.new
 
-  def new, do: %TodoList{}
+  def new(), do: %TodoList{}
 
   def add_entry(
     %TodoList{entries: entries, auto_id: auto_id} = todo_list,
@@ -24,7 +23,7 @@ defmodule TodoList do
   end
 
   def update_entry(todo_list, %{} = new_entry) do
-    update_entry(todo_list, new_entry.id, fn _ -> new_entry end)
+    update_entry(todo_list, new_entry.id, fn (_) -> new_entry end)
   end
 
   def update_entry(
@@ -32,21 +31,22 @@ defmodule TodoList do
     entry_id,
     updater_fun
     ) do
-      case entries[entry_id] of
+      case entries[entry_id] do
         nil -> todo_list
 
         old_entry ->
-          new_entry = updater_fun(old_entry)
+          old_entry_id = old_entry.id
+          new_entry = %{id: ^old_entry_id} = updater_fun.(old_entry)
           new_entries = HashDict.put(entries, new_entry.id, new_entry)
           %TodoList{todo_list | entries: new_entries}
     end
   end
 
   def delete_entry(
-    %TodoList{entries: entries} = todo_list,
-    entry_id,
+    %TodoList{} = todo_list,
+    entry_id
   ) do
-    %TodoLsit{todo_list | HashDict.delete(todo_list, entry_id)}
+    new_entries = HashDict.delete(todo_list.entries, entry_id)
+    %TodoList{todo_list | entries: new_entries}
   end
-
 end
