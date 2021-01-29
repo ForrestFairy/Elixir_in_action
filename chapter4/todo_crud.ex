@@ -61,7 +61,7 @@ defmodule TodoList.CsvImporter do
   def import(path) do
     path
     |> change_into_lines
-    |> split_into_entries
+    |> create_entries
     |> TodoList.new()
   end
 
@@ -79,7 +79,7 @@ defmodule TodoList.CsvImporter do
 
   def split_into_entries(line) do
     line
-    |> Enum.map(&String.split(&1, ","))
+    |> String.split(",")
     |> convert_date
   end
 
@@ -93,9 +93,8 @@ defmodule TodoList.CsvImporter do
       |> String.split("/")
       |> Enum.map(&String.to_integer/1)
 
-    {:ok, date} = Date.new(year, month, day)
-    date
-  end
+    {year, month, day}
+    end
 
   def create_entry({date, title}) do
     %{date: date, title: title}
