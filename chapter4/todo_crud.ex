@@ -1,7 +1,13 @@
 defmodule TodoList do
   defstruct auto_id: 1, entries: HashDict.new
 
-  def new(), do: %TodoList{}
+  def new(entries \\ []) do
+    Enum.reduce(
+      entries,
+      %TodoList{},
+      &add_entry(&2, &1)
+    )
+  end
 
   def add_entry(
     %TodoList{entries: entries, auto_id: auto_id} = todo_list,
@@ -48,5 +54,50 @@ defmodule TodoList do
   ) do
     new_entries = HashDict.delete(todo_list.entries, entry_id)
     %TodoList{todo_list | entries: new_entries}
+  end
+end
+
+defmodule TodoList.CsvImporter do
+  def import(path) do
+    path
+    |> change_into_lines
+    |> split_into_entries
+    |> TodoList.new()
+  end
+
+  def change_into_lines(path) do
+    path
+    |> File.stream!()
+    |> Stream.map(&String.replace(&1, "\n", ""))
+  end
+
+  def create_entries(lines) do
+    lines
+    |> Stream.map(&split_into_entries/1)
+    |> Stream.map(&create_entry/1)
+  end
+
+  def split_into_entries(line) do
+    line
+    |> Enum.map(&String.split(&1, ","))
+    |> convert_date
+  end
+
+  def convert_date([date, title]) do
+    {parse_date(date), title}
+  end
+
+  def parse_date(date_string) do
+    [year, month, day] =
+      date_string
+      |> String.split("/")
+      |> Enum.map(&String.to_integer/1)
+
+    {:ok, date} = Date.new(year, month, day)
+    date
+  end
+
+  def create_entry({date, title}) do
+    %{date: date, title: title}
   end
 end
