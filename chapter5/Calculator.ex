@@ -29,7 +29,7 @@ defmodule Calculator do
 
   end
 
-  def loop (current) do
+  defp loop (current) do
     new_curr = receive do
       message ->
         process_message(current, message)
