@@ -1,22 +1,24 @@
 defmodule Todo.Database do
  use GenServer
+ defstruct auto_id: 0, entries: HashDict.new
 
  def start(db_folder) do
-  GenServer.start(__MODULE__, db_folder,
-    name: :database_server
-    )
+  GenServer.start(__MODULE__, db_folder,)
  end
 
  def store(key, data) do
-   GenServer.cast(:database_server, {:store, key, data})
+  worker = get_worker(key)
+  worker.store(key, data)
  end
 
  def get(key) do
-  GenServer.call(:database_server, {:get, key})
+  worker = get_worker(key)
+  worker.get(key)
  end
 
  def init(db_folder) do
   File.mkdir_p(db_folder)
+  Enum.reduce()
   {:ok, db_folder}
  end
 

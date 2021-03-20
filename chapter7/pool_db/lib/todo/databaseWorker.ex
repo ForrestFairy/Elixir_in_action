@@ -6,11 +6,11 @@ defmodule Todo.DatabaseWorker do
   end
 
   def store(key, data) do
-    GenServer.cast(:database_server, {:store, key, data})
+    GenServer.cast(worker, {:store, key, data})
   end
 
   def get(key) do
-    GenServer.call(:database_server, {:get, key})
+    GenServer.call(worker, {:get, key})
   end
 
   def init(db_folder) do
