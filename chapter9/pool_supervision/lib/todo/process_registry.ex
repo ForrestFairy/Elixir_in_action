@@ -14,6 +14,10 @@ defmodule Todo.ProcessRegistry do
     GenServer.call(__MODULE__, {:register_name, key, pid})
   end
 
+  def deregister_pid(pid) do
+    GenServer.call(__MODULE__, {:deregister_pid, pid})
+  end
+
   def whereis_name(key) do
     GenServer.call(__MODULE__, {:whereis_name, key})
   end
@@ -28,7 +32,7 @@ defmodule Todo.ProcessRegistry do
   end
 
   def unregister_name({name, _}) do
-    GenServer.call(__MODULE__, {:unregister_name})
+    GenServer.call(__MODULE__, {:unregister_name, name})
   end
 
   def handle_call({:register_name, key, pid}, _, process_registry) do
@@ -41,6 +45,10 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
+  def handle_call({:deregister_pid, pid}, _, process_registry) do
+    Map.delete(process_registry, pid)
+  end
+
   def handle_call({:whereis_name, key}, _, process_registry) do
     {
       :reply,
@@ -50,7 +58,7 @@ defmodule Todo.ProcessRegistry do
   end
 
   def handle_info({:DOWN, _, :process, pid, _}, process_registry) do
-    {:noreply, deregister_pid(new_registry, pid)}
+    {:noreply, deregister_pid(process_registry, pid)}
   end
 
 end
