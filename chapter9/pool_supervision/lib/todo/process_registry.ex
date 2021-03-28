@@ -1,25 +1,39 @@
 defmodule Todo.ProcessRegistry do
-  import Kernel, except: [send: 2]
   use GenServer
+  import Kernel, except: [send: 2]
 
   def start_link do
     IO.puts "Starting process registry"
+    GenServer.start_link(__MODULE__, nil, name: :process_registry)
   end
 
   def init(_) do
     {:ok, %{}}
   end
 
+  def whereis_name(key) do
+    GenServer.call(__MODULE__, {:whereis_name, key})
+  end
+
   def register_name(key, pid) do
     GenServer.call(__MODULE__, {:register_name, key, pid})
   end
 
-  def deregister_pid(pid) do
-    GenServer.call(__MODULE__, {:deregister_pid, pid})
+  def unregister_name(key) do
+    GenServer.call(:process_registry, {:unregister_name, key})
   end
 
-  def whereis_name(key) do
-    GenServer.call(__MODULE__, {:whereis_name, key})
+  defp deregister_pid(process_registry, pid) do
+    Enum.reduce(
+      process_registry,
+      process_registry,
+      fn
+        ({registered_alias, registered_process}, registry_acc) when registered_process == pid ->
+          Map.delete(registry_acc, registered_alias)
+
+          (_, registry_acc) -> registry_acc
+        end
+    )
   end
 
   def send(key, msg) do
@@ -29,10 +43,6 @@ defmodule Todo.ProcessRegistry do
         Kernel.send(pid, msg)
         pid
     end
-  end
-
-  def unregister_name({name, _}) do
-    GenServer.call(__MODULE__, {:unregister_name, name})
   end
 
   def handle_call({:register_name, key, pid}, _, process_registry) do
@@ -45,8 +55,8 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
-  def handle_call({:deregister_pid, pid}, _, process_registry) do
-    Map.delete(process_registry, pid)
+  def handle_call({:unregister_pid, key}, _, process_registry) do
+    Map.delete(process_registry, key)
   end
 
   def handle_call({:whereis_name, key}, _, process_registry) do
